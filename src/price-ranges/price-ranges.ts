@@ -241,9 +241,9 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		this.series.detachPrimitive(this);
 	}
 
-    public static updateAllVolumes(allKlineData: any[], calculateVolumeFn: (priceRange: Priceranges, klineData: any[]) => number) {
+    public static updateAllVolumes(calculateVolumeFn: (priceRange: Priceranges) => number) {
         Priceranges._instances.forEach(instance => {
-            instance.volume = calculateVolumeFn(instance, allKlineData);
+            instance.volume = calculateVolumeFn(instance);
             instance.requestUpdate();
         });
     }
@@ -261,6 +261,8 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 
 			Priceranges._drawingInstance = new Priceranges({ time, price }, { time, price });
 			Priceranges._targetSeries.attachPrimitive(Priceranges._drawingInstance);
+			// Ensure view coordinates are up-to-date for new instance
+			Priceranges._drawingInstance.updateAllViews();
 			Priceranges._drawingState = 'DRAWING_STARTED';
 			Priceranges._pendingDrawingStart = false; // Drawing has started, no longer pending
 			return; // Consume the click event
@@ -272,7 +274,15 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				const price = Priceranges._targetSeries.coordinateToPrice(y);
 				if (!time || !price) return;
 				Priceranges._drawingInstance.p2 = { time, price };
+				// Ensure view coordinates are up-to-date after setting final point
+				Priceranges._drawingInstance.updateAllViews();
 				Priceranges._drawingInstance.requestUpdate();
+				
+				// Notify about price range creation
+				if (Priceranges._onPriceRangeModified) {
+					Priceranges._onPriceRangeModified();
+				}
+				
 				Priceranges._drawingInstance = null;
 				Priceranges._drawingState = 'IDLE';
 				// Re-enable the button and reset its text
@@ -361,6 +371,8 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			if (!time || !price) return;
 
 			Priceranges._drawingInstance.p2 = { time, price };
+			// Ensure view coordinates are up-to-date during drawing
+			Priceranges._drawingInstance.updateAllViews();
 			Priceranges._drawingInstance.requestUpdate();
 			return;
 		}
@@ -442,7 +454,14 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 					}
 					break;
 			}
+			// Ensure view coordinates are up-to-date during handle drag
+			instance.updateAllViews();
 			instance.requestUpdate();
+			
+			// Notify about price range modification
+			if (Priceranges._onPriceRangeModified) {
+				Priceranges._onPriceRangeModified();
+			}
 			return;
 		}
 
@@ -497,6 +516,9 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			this._initialP1 = { ...this.p1 }; // Keep initial for width/height calculation
 			this._initialP2 = { ...this.p2 }; // Keep initial for width/height calculation
 
+			// Ensure view coordinates are up-to-date before starting drag
+			this.updateAllViews();
+
 			this.chart.applyOptions({
 				handleScroll: {
 					pressedMouseMove: false,
@@ -529,6 +551,9 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 
 			this._initialP1 = { ...this.p1 };
 			this._initialP2 = { ...this.p2 };
+
+			// Ensure view coordinates are up-to-date before starting drag
+			this.updateAllViews();
 
 			this.chart.applyOptions({
 				handleScroll: {
@@ -596,7 +621,14 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				this.p2.price = this.p1.price + priceDiff;
 			}
 		}
+		// Ensure view coordinates are up-to-date during drag
+		this.updateAllViews();
 		this.requestUpdate();
+		
+		// Notify about price range modification
+		if (Priceranges._onPriceRangeModified) {
+			Priceranges._onPriceRangeModified();
+		}
 	};
 
 	private _handleTouchMove = (event: TouchEvent) => {
@@ -625,7 +657,14 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				this.p2.price = this.p1.price + priceDiff;
 			}
 		}
+		// Ensure view coordinates are up-to-date during drag
+		this.updateAllViews();
 		this.requestUpdate();
+		
+		// Notify about price range modification
+		if (Priceranges._onPriceRangeModified) {
+			Priceranges._onPriceRangeModified();
+		}
 	};
 
 	private _timeCurrentlyVisible(
