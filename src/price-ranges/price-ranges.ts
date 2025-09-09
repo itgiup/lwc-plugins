@@ -51,7 +51,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private static _targetSeries: ISeriesApi<SeriesType> | null = null;
 	private static _pendingDrawingStart: boolean = false;
 	private static _onDrawingCompleted: (() => void) | null = null;
-    private static _onPriceRangeModified: (() => void) | null = null; // New static callback
+	private static _onPriceRangeModified: (() => void) | null = null; // New static callback
 
 	private _options: PricerangesOptions;
 	p1: Point;
@@ -69,7 +69,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private _dragOffsetX: number | null = null;
 	private _dragOffsetY: number | null = null;
 
-    public volume: number | null = null; // Add volume property
+	public volume: number | null = null; // Add volume property
 
 	public constructor(
 		p1: Point,
@@ -159,17 +159,17 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		const timeDiff = p1.time as number - (p2.time as number);
 		const barDiff = formatDuration(timeDiff);
 
-        const data: InfoLabelData = {
-            priceDiff: formatNumber(priceDiff),
-            percentageDiff: formatNumber(percentageDiff) + '%',
-            barDiff,
-        };
+		const data: InfoLabelData = {
+			priceDiff: formatNumber(priceDiff),
+			percentageDiff: formatNumber(percentageDiff) + '%',
+			barDiff,
+		};
 
-        if (this.volume !== null) {
-            data.volume = formatNumber(this.volume); // Add volume if it exists
-        }
+		if (this.volume !== null) {
+			data.volume = formatNumber(this.volume); // Add volume if it exists
+		}
 
-        return data;
+		return data;
 	}
 
 	autoscaleInfo(
@@ -226,9 +226,9 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		Priceranges._onDrawingCompleted = callback;
 	}
 
-    public static setOnPriceRangeModified(callback: (() => void) | null) { // New static method
-        Priceranges._onPriceRangeModified = callback;
-    }
+	public static setOnPriceRangeModified(callback: (() => void) | null) { // New static method
+		Priceranges._onPriceRangeModified = callback;
+	}
 
 	public getSelectedHandle(): string | null {
 		if (Priceranges._stickyPart && Priceranges._stickyPart.instance === this) {
@@ -241,12 +241,41 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		this.series.detachPrimitive(this);
 	}
 
-    public static updateAllVolumes(calculateVolumeFn: (priceRange: Priceranges) => number) {
-        Priceranges._instances.forEach(instance => {
-            instance.volume = calculateVolumeFn(instance);
-            instance.requestUpdate();
-        });
-    }
+	/**
+	 * Updates the volume value for all price range instances using the provided calculation function.
+	 * 
+	 * This method iterates through all existing price range instances and applies the given
+	 * calculation function to determine the volume value for each instance. After updating
+	 * the volume, it triggers a visual update to reflect the changes in the chart.
+	 * 
+	 * @param calculateVolumeFn - A function that calculates the volume value for a given price range.
+	 *                            The function receives a Priceranges instance and should return a number.
+	 * @param volumeColorOptions - Optional object containing color settings for the volume label.
+	 *                            Can include volumeLabelBackgroundColor, volumeLabelTextColor, and volumeLabelBorderColor.
+	 * @example
+	 * // Update volumes based on price difference
+	 * Priceranges.updateAllVolumes((priceRange) => {
+	 *   const priceDiff = Math.abs(priceRange.p2.price - priceRange.p1.price);
+	 *   return priceDiff * 1000; // Example calculation
+	 * }, {
+	 *   volumeLabelBackgroundColor: 'rgba(255, 0, 0, 0.7)', // Red background for high volumes
+	 *   volumeLabelTextColor: 'white',
+	 *   volumeLabelBorderColor: 'rgba(255, 0, 0, 1)'
+	 * });
+	 */
+	public static updateAllVolumes(
+		calculateVolumeFn: (priceRange: Priceranges) => {
+			volume: number,
+			options: Partial<PricerangesOptions>
+		}
+	) {
+		Priceranges._instances.forEach(instance => {
+			const { volume, options } = calculateVolumeFn(instance);
+			instance.volume = volume;
+			instance.applyOptions(options);
+			instance.requestUpdate();
+		});
+	}
 
 	private static _handleGlobalClick = (param: MouseEventParams) => {
 		if (!param.point || !Priceranges._chart || !Priceranges._targetSeries || !Priceranges._targetSeries) return;
@@ -277,12 +306,12 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				// Ensure view coordinates are up-to-date after setting final point
 				Priceranges._drawingInstance.updateAllViews();
 				Priceranges._drawingInstance.requestUpdate();
-				
+
 				// Notify about price range creation
 				if (Priceranges._onPriceRangeModified) {
 					Priceranges._onPriceRangeModified();
 				}
-				
+
 				Priceranges._drawingInstance = null;
 				Priceranges._drawingState = 'IDLE';
 				// Re-enable the button and reset its text
@@ -457,7 +486,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			// Ensure view coordinates are up-to-date during handle drag
 			instance.updateAllViews();
 			instance.requestUpdate();
-			
+
 			// Notify about price range modification
 			if (Priceranges._onPriceRangeModified) {
 				Priceranges._onPriceRangeModified();
@@ -579,10 +608,10 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			},
 		});
 
-        // Trigger callback if set
-        if (Priceranges._onPriceRangeModified) {
-            Priceranges._onPriceRangeModified();
-        }
+		// Trigger callback if set
+		if (Priceranges._onPriceRangeModified) {
+			Priceranges._onPriceRangeModified();
+		}
 	};
 
 	private _handleTouchEnd = () => {
@@ -624,7 +653,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		// Ensure view coordinates are up-to-date during drag
 		this.updateAllViews();
 		this.requestUpdate();
-		
+
 		// Notify about price range modification
 		if (Priceranges._onPriceRangeModified) {
 			Priceranges._onPriceRangeModified();
@@ -660,7 +689,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		// Ensure view coordinates are up-to-date during drag
 		this.updateAllViews();
 		this.requestUpdate();
-		
+
 		// Notify about price range modification
 		if (Priceranges._onPriceRangeModified) {
 			Priceranges._onPriceRangeModified();

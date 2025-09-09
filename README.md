@@ -7,8 +7,8 @@ Description of the Plugin.
 ## Running Locally
 
 ```shell
-npm install
-npm run dev
+yarn install
+yarn run dev
 ```
 
 Visit `localhost:5173` in the browser.
@@ -16,7 +16,7 @@ Visit `localhost:5173` in the browser.
 ## Compiling
 
 ```shell
-npm run compile
+yarn run compile
 ```
 
 Check the output in the `dist` folder.
@@ -31,7 +31,7 @@ package to NPM with these commands:
 
 ```shell
 cd dist
-npm publish
+yarn publish
 ```
 
 Hint: append `--dry-run` to the end of the publish command to see the results of

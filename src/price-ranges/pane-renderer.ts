@@ -136,15 +136,16 @@ export class PricerangesPaneRenderer implements IPrimitivePaneRenderer {
                         // Position volume label below the rectangle instead of above
                         const volumeLabelY = verticalPositions.position + verticalPositions.length + 5; // 5px below the box
 
+                        // Use custom volume label colors if available
                         // background
-                        ctx.fillStyle = options.labelBackgroundColor;
+                        ctx.fillStyle = options.volumeLabelBackgroundColor || options.labelBackgroundColor;
                         ctx.fillRect(volumeLabelX, volumeLabelY, volumeLabelWidth, volumeLabelHeight);
                         // border
-                        ctx.strokeStyle = options.labelBorderColor;
+                        ctx.strokeStyle = options.volumeLabelBorderColor || options.labelBorderColor;
                         ctx.lineWidth = options.labelBorderWidth;
                         ctx.strokeRect(volumeLabelX, volumeLabelY, volumeLabelWidth, volumeLabelHeight);
                         // text
-                        ctx.fillStyle = options.labelTextColor;
+                        ctx.fillStyle = options.volumeLabelTextColor || options.labelTextColor;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.fillText(volumeLabelText, xCenter, volumeLabelY + volumeLabelHeight / 2);
