@@ -22,6 +22,11 @@ export interface PricerangesOptions {
 	labelFontWeight: string;
 	labelFontFamily: string;
 
+	// Volume label options
+	volumeLabelBackgroundColor: string;
+	volumeLabelTextColor: string;
+	volumeLabelBorderColor: string;
+
 	labelColor: string;
 	showLabels: boolean;
 	priceLabelFormatter: (price: number) => string;
@@ -46,6 +51,11 @@ export const defaultOptions: PricerangesOptions = {
 	borderWidth: 0.5, // Reduced
 	hoverBorderWidth: 1, // Reduced
 	selectedBorderWidth: 1.5, // Reduced
+
+	// Volume label default colors
+	volumeLabelBackgroundColor: 'rgba(40, 40, 40, 1)', // Green background
+	volumeLabelTextColor: 'white',
+	volumeLabelBorderColor: 'rgba(150, 150, 150, 1)',
 
 	showInfoLabel: true,
 	arrowColor: 'rgba(0, 122, 255, 1)',

@@ -246,22 +246,42 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	public destroy(): void {
 		this.series.detachPrimitive(this);
 	}
+
 	/**
-	 * Updates volume data for all price ranges
+	 * Updates the volume value for all price range instances using the provided calculation function.
 	 * 
-	 * @param {any[]} allKlineData - Array containing all K-line data used for volume calculation
-	 * @param {(priceRange: Priceranges, klineData: any[]) => number} calculateVolumeFn - Callback function for calculating volume
-	 * @param {Priceranges} priceRange - Price range instance
-	 * @param {any[]} klineData - Array of K-line data
-	 * @returns {number} Calculated volume value
-	 * @returns {void}
+	 * This method iterates through all existing price range instances and applies the given
+	 * calculation function to determine the volume value for each instance. After updating
+	 * the volume, it triggers a visual update to reflect the changes in the chart.
+	 * 
+	 * @param calculateVolumeFn - A function that calculates the volume value for a given price range.
+	 *                            The function receives a Priceranges instance and should return a number.
+	 * @param volumeColorOptions - Optional object containing color settings for the volume label.
+	 *                            Can include volumeLabelBackgroundColor, volumeLabelTextColor, and volumeLabelBorderColor.
+	 * @example
+	 * // Update volumes based on price difference
+	 * Priceranges.updateAllVolumes((priceRange) => {
+	 *   const priceDiff = Math.abs(priceRange.p2.price - priceRange.p1.price);
+	 *   return priceDiff * 1000; // Example calculation
+	 * }, {
+	 *   volumeLabelBackgroundColor: 'rgba(255, 0, 0, 0.7)', // Red background for high volumes
+	 *   volumeLabelTextColor: 'white',
+	 *   volumeLabelBorderColor: 'rgba(255, 0, 0, 1)'
+	 * });
 	 */
-    public static updateAllVolumes(calculateVolumeFn: (priceRange: Priceranges) => number) {
-        Priceranges._instances.forEach(instance => {
-            instance.volume = calculateVolumeFn(instance);
-            instance.requestUpdate();
-        });
-    }
+	public static updateAllVolumes(
+		calculateVolumeFn: (priceRange: Priceranges) => {
+			volume: number,
+			options: Partial<PricerangesOptions>
+		}
+	) {
+		Priceranges._instances.forEach(instance => {
+			const { volume, options } = calculateVolumeFn(instance);
+			instance.volume = volume;
+			instance.applyOptions(options);
+			instance.requestUpdate();
+		});
+	}
 
 	private static _handleGlobalClick = (param: MouseEventParams) => {
 		if (!param.point || !Priceranges._chart || !Priceranges._targetSeries || !Priceranges._targetSeries) return;
@@ -292,12 +312,12 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				// Ensure view coordinates are up-to-date after setting final point
 				Priceranges._drawingInstance.updateAllViews();
 				Priceranges._drawingInstance.requestUpdate();
-				
+
 				// Notify about price range creation
 				if (Priceranges._onPriceRangeModified) {
 					Priceranges._onPriceRangeModified();
 				}
-				
+
 				Priceranges._drawingInstance = null;
 				Priceranges._drawingState = 'IDLE';
 				// Re-enable the button and reset its text
@@ -472,7 +492,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			// Ensure view coordinates are up-to-date during handle drag
 			instance.updateAllViews();
 			instance.requestUpdate();
-			
+
 			// Notify about price range modification
 			if (Priceranges._onPriceRangeModified) {
 				Priceranges._onPriceRangeModified();
@@ -639,7 +659,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		// Ensure view coordinates are up-to-date during drag
 		this.updateAllViews();
 		this.requestUpdate();
-		
+
 		// Notify about price range modification
 		if (Priceranges._onPriceRangeModified) {
 			Priceranges._onPriceRangeModified();
@@ -675,7 +695,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		// Ensure view coordinates are up-to-date during drag
 		this.updateAllViews();
 		this.requestUpdate();
-		
+
 		// Notify about price range modification
 		if (Priceranges._onPriceRangeModified) {
 			Priceranges._onPriceRangeModified();

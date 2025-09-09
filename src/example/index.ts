@@ -7,6 +7,7 @@ import {
     HistogramData
 } from 'lightweight-charts';
 import { Priceranges, SelectionManager } from '../price-ranges/price-ranges';
+import { PricerangesOptions } from '../price-ranges/options';
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
 let currentInterval = '1m'; // Renamed from 'interval'
@@ -27,12 +28,12 @@ const volumes: {
 }
 
 const colors = {
-    up: '#26a69a',
-    down: '#ef5350',
-    borderDownColor: '#ef5350',
-    borderUpColor: '#26a69a',
-    wickDownColor: '#ef5350',
-    wickUpColor: '#26a69a',
+    up: 'rgb(14, 128, 18)',
+    down: 'rgb(214, 37, 37)',
+    borderDownColor: 'rgb(214, 37, 37)',
+    borderUpColor: 'rgb(14, 128, 18)',
+    wickDownColor: 'rgb(214, 37, 37)',
+    wickUpColor: 'rgb(14, 128, 18)',
 }
 
 
@@ -100,7 +101,13 @@ function calculateVolumeForPriceRange(priceRange: Priceranges) {
             totalVolume += candleVolume;
         }
     }
-    return totalVolume;
+    const options: Partial<PricerangesOptions> = {
+        volumeLabelTextColor: Math.floor(totalVolume) % 2 === 0 ? colors.up : colors.down, // Green background
+    }
+    return {
+        volume: totalVolume,
+        options
+    };
 }
 
 async function updateChartData() {
@@ -178,7 +185,8 @@ async function updateChartData() {
     volumes.series.setData(volumeData);
     volumes.data = volumeData; // Update global volumeData
 
-    Priceranges.updateAllVolumes(calculateVolumeForPriceRange); // This will be a new static method in Priceranges
+    // Update volumes with custom color for volume label
+    Priceranges.updateAllVolumes(calculateVolumeForPriceRange); // Use the new static method with color options
 }
 
 async function setupChart() {

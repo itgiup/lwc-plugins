@@ -1,20 +1,21 @@
-# lwc-plugin-price-ranges
+# itgiup-lwc-plugins
 
 A plugin for TradingView Lightweight Charts to display price ranges.
 
 ## Installation
 
 ```bash
-npm install lwc-plugin-price-ranges lightweight-charts
+yarn install itgiup-lwc-plugins lightweight-charts
 ```
 
 ## Usage
+### Priceranges
 
-This plugin allows you to draw custom price ranges on your Lightweight Charts series. Here's a basic example of how to use it with a `LineSeries`:
+This plugin allows you to draw custom price ranges on your Lightweight Charts series. Here's a basic example of how to use it:
 
 ```typescript
 import { CrosshairMode, LineSeries, createChart } from 'lightweight-charts';
-import { Priceranges } from 'lwc-plugin-price-ranges'; // Assuming this is how you import your plugin
+import { Priceranges } from 'itgiup-lwc-plugins'; // Assuming this is how you import your plugin
 
 // Create a chart instance
 const chart = createChart(document.getElementById('chart-container'), {
@@ -80,13 +81,40 @@ const primitive = new Priceranges(
 );
 
 lineSeries.attachPrimitive(primitive);
+
+function calculateVolumeForPriceRange(priceRange: Priceranges) {
+    let totalVolume = 0;
+    const p1Time = priceRange.p1.time as number;
+    const p2Time = priceRange.p2.time as number;
+    const minTime = Math.min(p1Time, p2Time);
+    const maxTime = Math.max(p1Time, p2Time);
+
+    for (const candle of volumes.data) {
+        const candleTime = candle.time as number; // Convert to milliseconds for comparison with p1Time/p2Time
+        const candleVolume = candle.value;
+
+        if (candleTime >= minTime && candleTime <= maxTime) {
+            totalVolume += candleVolume;
+        }
+    }
+    return totalVolume;
+}
+// Set callback for price range modifications
+Priceranges.setOnPriceRangeModified(() => {
+    // Update volumes with custom color for volume label
+    Priceranges.updateAllVolumes(calculateVolumeForPriceRange, {
+        volumeLabelBackgroundColor: 'rgba(76, 175, 80, 0.7)', // Green background
+        volumeLabelTextColor: 'white',
+        volumeLabelBorderColor: 'rgba(76, 175, 80, 1)'
+    });
+});
 ```
 
 ### Source code
-https://github.com/itgiup/lwc-plugin-price-ranges/
+https://github.com/itgiup/lwc-plugins/
 
 ### Demo
-https://lwc-plugin-price-ranges.pages.dev/
+https://itgiup-lwc-plugins.pages.dev/
 
 ## Features
 
@@ -100,7 +128,7 @@ https://lwc-plugin-price-ranges.pages.dev/
 To run the interactive example application with the chart and its features:
 
 1.  **Install Dependencies:**
-    Open your terminal in the project root directory (`d:\projects\itgiup-lwc-plugins\`) and run:
+    Open your terminal in the project root directory (`itgiup-lwc-plugins/`) and run:
     ```bash
     yarn install
     ```
