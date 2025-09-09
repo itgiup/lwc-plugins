@@ -8,6 +8,7 @@ let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with g
 let currentInterval = '1d'; // Renamed from 'interval'
 let chart: IChartApi; // Declare chart and series globally to be accessible for updates
 let candlestickSeries: ISeriesApi<'Candlestick'>;
+let allKlineData: any[] = []; // Global variable to store all kline data
 
 async function getBinanceKlines(symbol: string, interval: string, limit = 500) {
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
@@ -31,6 +32,7 @@ async function getBinanceKlines(symbol: string, interval: string, limit = 500) {
         high: parseFloat(k[2]),
         low: parseFloat(k[3]),
         close: parseFloat(k[4]),
+        volume: parseFloat(k[5]), // Add volume
     }));
 
     return { klineData, precision };
@@ -51,8 +53,36 @@ async function getAllBinanceSymbols() {
     }
 }
 
+function calculateVolumeForPriceRange(priceRange: Priceranges) {
+    let totalVolume = 0;
+    const p1Time = priceRange.p1.time as number;
+    const p2Time = priceRange.p2.time as number;
+    const minTime = Math.min(p1Time, p2Time);
+    const maxTime = Math.max(p1Time, p2Time);
+
+    const p1Price = priceRange.p1.price;
+    const p2Price = priceRange.p2.price;
+    const minPrice = Math.min(p1Price, p2Price);
+    const maxPrice = Math.max(p1Price, p2Price);
+
+    for (const candle of allKlineData) {
+        const candleTime = candle.time * 1000; // Convert to milliseconds for comparison with p1Time/p2Time
+        const candleHigh = candle.high;
+        const candleLow = candle.low;
+        const candleVolume = candle.volume;
+
+        if (candleTime >= minTime && candleTime <= maxTime) {
+            if (Math.max(candleLow, minPrice) <= Math.min(candleHigh, maxPrice)) {
+                totalVolume += candleVolume;
+            }
+        }
+    }
+    return totalVolume;
+}
+
 async function updateChartData() {
-    const { klineData, precision } = await getBinanceKlines(currentSymbol, currentInterval);
+    const { klineData: newKlineData, precision } = await getBinanceKlines(currentSymbol, currentInterval);
+    allKlineData = newKlineData; // Update global klineData
 
     if (!candlestickSeries) {
         // This should only happen on initial setup
@@ -81,20 +111,20 @@ async function updateChartData() {
         });
     }
 
-    candlestickSeries.setData(klineData);
+    candlestickSeries.setData(allKlineData); // Use allKlineData here
 
     // Existing primitive drawing logic (keep as is for now, might need adjustment later)
-    if (klineData.length > 50) {
-        const time1 = klineData[klineData.length - 50].time;
-        const time2 = klineData[klineData.length - 10].time;
+    if (allKlineData.length > 50) { // Use allKlineData here
+        const time1 = allKlineData[allKlineData.length - 50].time;
+        const time2 = allKlineData[allKlineData.length - 10].time;
 
         const primitive1 = new Priceranges(
-            { price: klineData[klineData.length - 50].low * 0.95, time: time1 },
-            { price: klineData[klineData.length - 10].high * 1.05, time: time2 }
+            { price: allKlineData[allKlineData.length - 50].low * 0.95, time: time1 },
+            { price: allKlineData[allKlineData.length - 10].high * 1.05, time: time2 }
         );
         const primitive2 = new Priceranges(
-            { price: klineData[klineData.length - 80].low * 0.95, time: klineData[klineData.length - 80].time },
-            { price: klineData[klineData.length - 60].high * 1.05, time: klineData[klineData.length - 60].time }
+            { price: allKlineData[allKlineData.length - 80].low * 0.95, time: allKlineData[allKlineData.length - 80].time },
+            { price: allKlineData[allKlineData.length - 60].high * 1.05, time: allKlineData[allKlineData.length - 60].time }
         );
 
         // Clear existing primitives before attaching new ones if needed
@@ -106,6 +136,7 @@ async function updateChartData() {
         candlestickSeries.attachPrimitive(primitive1);
         candlestickSeries.attachPrimitive(primitive2);
     }
+    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange); // This will be a new static method in Priceranges
 }
 
 async function setupChart() {
@@ -142,7 +173,7 @@ async function setupChart() {
         // Clear existing options
         symbolSelect.innerHTML = '';
         // Add new options
-        symbols.forEach(symbol => {
+        symbols.forEach((symbol: string) => {
             const option = document.createElement('option');
             option.value = symbol;
             option.textContent = symbol;
@@ -157,9 +188,15 @@ async function setupChart() {
     }
 
     await updateChartData();
+    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange); // Call it here too for initial ranges
 }
 
 setupChart();
+
+// Set callback for price range modifications
+Priceranges.setOnPriceRangeModified(() => {
+    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange);
+});
 
 // Add button event listener
 const drawButton = document.getElementById('drawPriceRangeButton');

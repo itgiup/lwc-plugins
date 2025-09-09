@@ -111,26 +111,52 @@ export class PricerangesPaneRenderer implements IPrimitivePaneRenderer {
 					const labelWidth = textMetrics.width + 10 * scope.horizontalPixelRatio; // padding
 					const labelHeight = 20 * scope.verticalPixelRatio; // fixed height
 					const labelX = xCenter - labelWidth / 2;
-					const labelY = verticalPositions.position - labelHeight - 5; // 5px above the box
+					let currentLabelY = verticalPositions.position - labelHeight - 5; // 5px above the box
 
 					// background
 					ctx.fillStyle = options.labelBackgroundColor;
-					ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+					ctx.fillRect(labelX, currentLabelY, labelWidth, labelHeight);
 					// border
 					ctx.strokeStyle = options.labelBorderColor;
 					ctx.lineWidth = options.labelBorderWidth;
-					ctx.strokeRect(labelX, labelY, labelWidth, labelHeight);
+					ctx.strokeRect(labelX, currentLabelY, labelWidth, labelHeight);
 					// text
 					ctx.fillStyle = options.labelTextColor;
 					ctx.textAlign = 'center';
 					ctx.textBaseline = 'middle';
-					ctx.fillText(labelText, xCenter, labelY + labelHeight / 2);
+					ctx.fillText(labelText, xCenter, currentLabelY + labelHeight / 2);
+
+                    // Draw Volume Label if it exists
+                    if (labelData.volume) {
+                        const volumeLabelText = `Volume: ${labelData.volume}`;
+                        const volumeTextMetrics = ctx.measureText(volumeLabelText);
+                        const volumeLabelWidth = volumeTextMetrics.width + 10 * scope.horizontalPixelRatio;
+                        const volumeLabelHeight = 20 * scope.verticalPixelRatio;
+                        const volumeLabelX = xCenter - volumeLabelWidth / 2;
+                        const volumeLabelY = currentLabelY - volumeLabelHeight - 5; // 5px above the previous label
+
+                        // background
+                        ctx.fillStyle = options.labelBackgroundColor;
+                        ctx.fillRect(volumeLabelX, volumeLabelY, volumeLabelWidth, volumeLabelHeight);
+                        // border
+                        ctx.strokeStyle = options.labelBorderColor;
+                        ctx.lineWidth = options.labelBorderWidth;
+                        ctx.strokeRect(volumeLabelX, volumeLabelY, volumeLabelWidth, volumeLabelHeight);
+                        // text
+                        ctx.fillStyle = options.labelTextColor;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(volumeLabelText, xCenter, volumeLabelY + volumeLabelHeight / 2);
+
+                        // Adjust delete button position if volume label is present
+                        currentLabelY = volumeLabelY; // Update currentLabelY to the top of the volume label
+                    }
 
 					// Draw delete button if selected
 					if (this._source.isSelected()) {
 						const deleteButtonRadius = 8 * scope.verticalPixelRatio;
 						const deleteButtonX = xCenter;
-						const deleteButtonY = labelY - deleteButtonRadius - (5 * scope.verticalPixelRatio);
+						const deleteButtonY = currentLabelY - deleteButtonRadius - (5 * scope.verticalPixelRatio);
 
 						// Draw the circle for the delete button
 						ctx.beginPath();

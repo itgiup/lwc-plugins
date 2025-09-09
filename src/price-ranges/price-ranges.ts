@@ -51,6 +51,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private static _targetSeries: ISeriesApi<SeriesType> | null = null;
 	private static _pendingDrawingStart: boolean = false;
 	private static _onDrawingCompleted: (() => void) | null = null;
+    private static _onPriceRangeModified: (() => void) | null = null; // New static callback
 
 	private _options: PricerangesOptions;
 	p1: Point;
@@ -67,6 +68,8 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private _activePricePoint: 'p1' | 'p2' | null = null;
 	private _dragOffsetX: number | null = null;
 	private _dragOffsetY: number | null = null;
+
+    public volume: number | null = null; // Add volume property
 
 	public constructor(
 		p1: Point,
@@ -155,11 +158,18 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		const percentageDiff = (priceDiff / p1.price) * 100;
 		const timeDiff = p1.time as number - (p2.time as number);
 		const barDiff = formatDuration(timeDiff);
-		return {
-			priceDiff: formatNumber(priceDiff),
-			percentageDiff: formatNumber(percentageDiff) + '%',
-			barDiff,
-		};
+
+        const data: InfoLabelData = {
+            priceDiff: formatNumber(priceDiff),
+            percentageDiff: formatNumber(percentageDiff) + '%',
+            barDiff,
+        };
+
+        if (this.volume !== null) {
+            data.volume = formatNumber(this.volume); // Add volume if it exists
+        }
+
+        return data;
 	}
 
 	autoscaleInfo(
@@ -216,6 +226,10 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		Priceranges._onDrawingCompleted = callback;
 	}
 
+    public static setOnPriceRangeModified(callback: (() => void) | null) { // New static method
+        Priceranges._onPriceRangeModified = callback;
+    }
+
 	public getSelectedHandle(): string | null {
 		if (Priceranges._stickyPart && Priceranges._stickyPart.instance === this) {
 			return Priceranges._stickyPart.part;
@@ -226,6 +240,13 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	public destroy(): void {
 		this.series.detachPrimitive(this);
 	}
+
+    public static updateAllVolumes(allKlineData: any[], calculateVolumeFn: (priceRange: Priceranges, klineData: any[]) => number) {
+        Priceranges._instances.forEach(instance => {
+            instance.volume = calculateVolumeFn(instance, allKlineData);
+            instance.requestUpdate();
+        });
+    }
 
 	private static _handleGlobalClick = (param: MouseEventParams) => {
 		if (!param.point || !Priceranges._chart || !Priceranges._targetSeries || !Priceranges._targetSeries) return;
@@ -532,10 +553,15 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 				pressedMouseMove: true,
 			},
 		});
+
+        // Trigger callback if set
+        if (Priceranges._onPriceRangeModified) {
+            Priceranges._onPriceRangeModified();
+        }
 	};
 
 	private _handleTouchEnd = () => {
-		this._handleMouseUp();
+		this._handleMouseUp(); // This already calls _handleMouseUp, so the callback will be triggered
 	};
 
 	private _handleMouseLeave = () => {

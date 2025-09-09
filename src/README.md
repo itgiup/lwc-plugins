@@ -95,6 +95,37 @@ https://lwc-plugin-price-ranges.pages.dev/
 *   **Enhanced Usability**: Increased the size of corner handles for easier selection.
 *   **Refined Aesthetics**: Reduced the border thickness of the price range box for a cleaner look.
 
+## Running the Example Application
+
+To run the interactive example application with the chart and its features:
+
+1.  **Install Dependencies:**
+    Open your terminal in the project root directory (`d:\projects\itgiup-lwc-plugins\`) and run:
+    ```bash
+    yarn install
+    ```
+
+2.  **Start the Development Server:**
+    After installing dependencies, run the development script:
+    ```bash
+    yarn dev
+    ```
+
+3.  **Access the Application:**
+    Once the development server starts, it will typically provide a local URL (e.g., `http://localhost:5173`). Open this URL in your web browser to see the chart with the symbol and timeframe selectors, the reset scale button, and the updated price range drawing functionality including volume display.
+
+## New Features in Example Application
+
+The example application has been enhanced with the following features:
+
+*   **Dynamic Symbol Selection:** Use the dropdown to choose from a comprehensive list of active trading pairs fetched directly from Binance (e.g., BTCUSDT, ETHUSDT). The chart will automatically update with data for the selected symbol.
+*   **Timeframe Selection:** A dedicated dropdown allows you to easily switch between various candlestick intervals (e.g., 1m, 5m, 1h, 1d). The chart will re-render to reflect the chosen timeframe.
+*   **Price Range Volume Display:** When you draw a price range, it now displays the aggregated trading volume within its time and price boundaries. This volume is dynamically calculated and updated when:
+    *   The chart's symbol or timeframe changes.
+    *   The price range itself is dragged or resized by the user.
+*   **Reset Chart Scale:** A "Reset Scale" button has been added to quickly adjust the chart's time and price scales to fit all visible data, providing a convenient way to revert zoom and pan operations.
+*   **Delete Price Range with Keyboard:** Select a drawn price range by clicking on it. You can now press the `Delete` or `Backspace` key on your keyboard to remove the selected price range from the chart.
+
 ## Contributing
 
 (Add information on how others can contribute to your project)

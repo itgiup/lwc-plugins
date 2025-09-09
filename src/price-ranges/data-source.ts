@@ -10,6 +10,7 @@ export interface InfoLabelData {
 	priceDiff: string;
 	percentageDiff: string;
 	barDiff: string;
+	volume?: string; // Add optional volume property
 }
 
 export interface PricerangesDataSource {
