@@ -5,7 +5,7 @@ import {
 import { Priceranges, SelectionManager } from '../price-ranges/price-ranges';
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
-let currentInterval = '1d'; // Renamed from 'interval'
+let currentInterval = '5m'; // Renamed from 'interval'
 let chart: IChartApi; // Declare chart and series globally to be accessible for updates
 let candlestickSeries: ISeriesApi<'Candlestick'>;
 let allKlineData: any[] = []; // Global variable to store all kline data

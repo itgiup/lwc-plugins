@@ -51,7 +51,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private static _targetSeries: ISeriesApi<SeriesType> | null = null;
 	private static _pendingDrawingStart: boolean = false;
 	private static _onDrawingCompleted: (() => void) | null = null;
-    private static _onPriceRangeModified: (() => void) | null = null; // New static callback
+	private static _onPriceRangeModified: (() => void) | null = null; // New static callback
 
 	private _options: PricerangesOptions;
 	p1: Point;
@@ -69,7 +69,7 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 	private _dragOffsetX: number | null = null;
 	private _dragOffsetY: number | null = null;
 
-    public volume: number | null = null; // Add volume property
+	public volume: number | null = null; // Add volume property
 
 	public constructor(
 		p1: Point,
@@ -159,17 +159,17 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		const timeDiff = p1.time as number - (p2.time as number);
 		const barDiff = formatDuration(timeDiff);
 
-        const data: InfoLabelData = {
-            priceDiff: formatNumber(priceDiff),
-            percentageDiff: formatNumber(percentageDiff) + '%',
-            barDiff,
-        };
+		const data: InfoLabelData = {
+			priceDiff: formatNumber(priceDiff),
+			percentageDiff: formatNumber(percentageDiff) + '%',
+			barDiff,
+		};
 
-        if (this.volume !== null) {
-            data.volume = formatNumber(this.volume); // Add volume if it exists
-        }
+		if (this.volume !== null) {
+			data.volume = formatNumber(this.volume); // Add volume if it exists
+		}
 
-        return data;
+		return data;
 	}
 
 	autoscaleInfo(
@@ -226,9 +226,9 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		Priceranges._onDrawingCompleted = callback;
 	}
 
-    public static setOnPriceRangeModified(callback: (() => void) | null) { // New static method
-        Priceranges._onPriceRangeModified = callback;
-    }
+	public static setOnPriceRangeModified(callback: (() => void) | null) { // New static method
+		Priceranges._onPriceRangeModified = callback;
+	}
 
 	public getSelectedHandle(): string | null {
 		if (Priceranges._stickyPart && Priceranges._stickyPart.instance === this) {
@@ -237,16 +237,32 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 		return null;
 	}
 
+	/**
+	 * Destroys the current primitive object by removing it from the series.
+	 * Calling this method will detach the current primitive from its associated series and release related resources.
+	 * 
+	 * @returns {void} No return value
+	 */
 	public destroy(): void {
 		this.series.detachPrimitive(this);
 	}
 
-    public static updateAllVolumes(allKlineData: any[], calculateVolumeFn: (priceRange: Priceranges, klineData: any[]) => number) {
-        Priceranges._instances.forEach(instance => {
-            instance.volume = calculateVolumeFn(instance, allKlineData);
-            instance.requestUpdate();
-        });
-    }
+	/**
+	 * Updates volume data for all price ranges
+	 * 
+	 * @param {any[]} allKlineData - Array containing all K-line data used for volume calculation
+	 * @param {(priceRange: Priceranges, klineData: any[]) => number} calculateVolumeFn - Callback function for calculating volume
+	 * @param {Priceranges} priceRange - Price range instance
+	 * @param {any[]} klineData - Array of K-line data
+	 * @returns {number} Calculated volume value
+	 * @returns {void}
+	 */
+	public static updateAllVolumes(allKlineData: any[], calculateVolumeFn: (priceRange: Priceranges, klineData: any[]) => number) {
+		Priceranges._instances.forEach(instance => {
+			instance.volume = calculateVolumeFn(instance, allKlineData);
+			instance.requestUpdate();
+		});
+	}
 
 	private static _handleGlobalClick = (param: MouseEventParams) => {
 		if (!param.point || !Priceranges._chart || !Priceranges._targetSeries || !Priceranges._targetSeries) return;
@@ -554,10 +570,10 @@ export class Priceranges extends PluginBase implements PricerangesDataSource {
 			},
 		});
 
-        // Trigger callback if set
-        if (Priceranges._onPriceRangeModified) {
-            Priceranges._onPriceRangeModified();
-        }
+		// Trigger callback if set
+		if (Priceranges._onPriceRangeModified) {
+			Priceranges._onPriceRangeModified();
+		}
 	};
 
 	private _handleTouchEnd = () => {
