@@ -56,8 +56,8 @@ lineSeries.attachPrimitive(primitive);
 
 ```typescript
 import { CrosshairMode, LineSeries, createChart } from 'lightweight-charts';
-import { generateLineData } from './sample-data'; // Relative path in example
-import { Priceranges } from '../price-ranges'; // Relative path in example
+import { generateLineData } from './sample-data'; 
+import { Priceranges } from 'itgiup-lwc-plugins';
 
 const chart = ((window as unknown as any).chart = createChart('chart', {
 	autoSize: true,
@@ -71,6 +71,9 @@ const lineSeries = chart.addSeries(LineSeries, {
 });
 const data = generateLineData();
 lineSeries.setData(data);
+
+Priceranges.setChart(chart);
+Priceranges.setTargetSeries(lineSeries);
 
 const time1 = data[data.length - 50].time;
 const time2 = data[data.length - 10].time;
@@ -102,11 +105,7 @@ function calculateVolumeForPriceRange(priceRange: Priceranges) {
 // Set callback for price range modifications
 Priceranges.setOnPriceRangeModified(() => {
     // Update volumes with custom color for volume label
-    Priceranges.updateAllVolumes(calculateVolumeForPriceRange, {
-        volumeLabelBackgroundColor: 'rgba(76, 175, 80, 0.7)', // Green background
-        volumeLabelTextColor: 'white',
-        volumeLabelBorderColor: 'rgba(76, 175, 80, 1)'
-    });
+    Priceranges.updateAllVolumes(calculateVolumeForPriceRange);
 });
 ```
 
