@@ -1,5 +1,9 @@
+yarn build
+yarn compile 
+
+
 git add .
-git commit -m "price range: màu của label volume đã có thể thay đổi được"
+git commit -m "fix compile phải kèm types"
 git push
 
 # merge -> main 

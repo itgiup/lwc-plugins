@@ -103,7 +103,8 @@ pluginsToBuild.forEach(file => {
 	try {
 		const esModuleTyping = generateDtsBundle([
 			{
-				filePath: `./typings/${pluginFileName}.d.ts`,
+				// Sử dụng file.exportName để trỏ đúng đường dẫn
+				filePath: `./typings/index.d.ts`,
 			},
 		]);
 		const typingFilePath = resolve(compiledFolder, `${file.exportName}.d.ts`);
@@ -120,10 +121,10 @@ pluginsToBuild.forEach(file => {
 const readmeSrcPath = resolve(currentDir, 'src', 'README.md');
 const readmeDestPath = resolve(compiledFolder, 'README.md');
 if (existsSync(readmeSrcPath)) {
-    copyFileSync(readmeSrcPath, readmeDestPath);
-    console.log('Copied src/README.md to dist/README.md');
+	copyFileSync(readmeSrcPath, readmeDestPath);
+	console.log('Copied src/README.md to dist/README.md');
 } else {
-    console.warn('src/README.md not found, skipping copy.');
+	console.warn('src/README.md not found, skipping copy.');
 }
 
 const endTime = Date.now().valueOf();

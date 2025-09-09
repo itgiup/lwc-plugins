@@ -6,8 +6,7 @@ import {
     CandlestickData,
     HistogramData
 } from 'lightweight-charts';
-import { Priceranges, SelectionManager } from '../price-ranges/price-ranges';
-import { PricerangesOptions } from '../price-ranges/options';
+import { Priceranges, SelectionManager, PricerangesOptions } from '../price-ranges';
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
 let currentInterval = '1m'; // Renamed from 'interval'
@@ -28,12 +27,12 @@ const volumes: {
 }
 
 const colors = {
-    up: 'rgb(14, 128, 18)',
-    down: 'rgb(214, 37, 37)',
-    borderDownColor: 'rgb(214, 37, 37)',
-    borderUpColor: 'rgb(14, 128, 18)',
-    wickDownColor: 'rgb(214, 37, 37)',
-    wickUpColor: 'rgb(14, 128, 18)',
+    up: 'rgba(19, 153, 4, 0.8)',
+    down: 'rgba(246, 70, 93, 0.8)',
+    borderDownColor: 'rgba(246, 70, 93, 0.8)',
+    borderUpColor: 'rgba(19, 153, 4, 0.8)',
+    wickDownColor: 'rgba(246, 70, 93, 0.8)',
+    wickUpColor: 'rgba(19, 153, 4, 0.8)',
 }
 
 
