@@ -23,4 +23,4 @@ typings
 *.sln
 *.sw?
 
-./example
+/example/
