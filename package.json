@@ -1,0 +1,23 @@
+{
+  "name": "itgiup-lwc-plugins",
+  "license": "MIT",
+  "author": "itgiup",
+  "description": "Plugins for TradingView Lightweight Charts.",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config src/vite.config.js",
+    "build": "vite build --config src/vite.config.js && mv ./example/src/example/index.html ./example/ && rm -rf ./example/src",
+    "compile": "tsc && node compile.mjs",
+    "publish": "npm run compile && cd dist && npm publish"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4",
+    "vite": "^4.3.1"
+  },
+  "dependencies": {
+    "dts-bundle-generator": "^8.0.1",
+    "fancy-canvas": "^2.1.0",
+    "lightweight-charts": "~5.0.0"
+  }
+}
