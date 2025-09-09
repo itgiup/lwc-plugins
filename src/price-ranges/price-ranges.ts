@@ -18,7 +18,7 @@ import { PricerangesPaneView } from './pane-view';
 import { PluginBase } from '../plugin-base';
 import { PricerangesOptions, defaultOptions } from './options';
 
-class SelectionManager {
+export class SelectionManager {
 	private static _selectedItem: Priceranges | null = null;
 
 	public static get selectedItem(): Priceranges | null {

@@ -1,5 +1,5 @@
 git add .
-git commit -m "ok"
+git commit -m "price range: thêm tính năng xóa bằng nút xóa Delete "
 git push
 
 # merge -> main 
@@ -10,4 +10,4 @@ git push origin main
 git checkout master
 
 # deploy
-# wrangler pages deploy example --project-name= --branch=production
+# wrangler pages deploy example --project-name=itgiup-lwc-plugins --branch=production

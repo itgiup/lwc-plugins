@@ -2,7 +2,7 @@ import {
     CandlestickSeries, ColorType, CrosshairMode,
     createChart, IChartApi, ISeriesApi
 } from 'lightweight-charts';
-import { Priceranges } from '../price-ranges';
+import { Priceranges, SelectionManager } from '../price-ranges/price-ranges';
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
 let currentInterval = '1d'; // Renamed from 'interval'
@@ -204,3 +204,13 @@ if (resetScaleButton) {
         }
     });
 }
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+        const selectedPriceRange = SelectionManager.selectedItem;
+        if (selectedPriceRange) {
+            selectedPriceRange.destroy();
+            SelectionManager.selectedItem = null; // Clear selection after deletion
+        }
+    }
+});
