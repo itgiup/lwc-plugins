@@ -1,14 +1,40 @@
 import {
     CandlestickSeries, ColorType, CrosshairMode,
-    createChart, IChartApi, ISeriesApi
+    createChart, IChartApi, ISeriesApi,
+    Time,
+    HistogramSeries,
+    CandlestickData,
+    HistogramData
 } from 'lightweight-charts';
 import { Priceranges, SelectionManager } from '../price-ranges/price-ranges';
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
-let currentInterval = '5m'; // Renamed from 'interval'
+let currentInterval = '1m'; // Renamed from 'interval'
 let chart: IChartApi; // Declare chart and series globally to be accessible for updates
-let candlestickSeries: ISeriesApi<'Candlestick'>;
-let allKlineData: any[] = []; // Global variable to store all kline data
+const candles: {
+    tickSeries: ISeriesApi<'Candlestick'> | null;
+    data: CandlestickData<Time>[];
+} = {
+    tickSeries: null,
+    data: [],
+}
+const volumes: {
+    series: ISeriesApi<'Histogram'> | null;
+    data: HistogramData<Time>[];
+} = {
+    series: null,
+    data: [],
+}
+
+const colors = {
+    up: '#26a69a',
+    down: '#ef5350',
+    borderDownColor: '#ef5350',
+    borderUpColor: '#26a69a',
+    wickDownColor: '#ef5350',
+    wickUpColor: '#26a69a',
+}
+
 
 async function getBinanceKlines(symbol: string, interval: string, limit = 500) {
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
@@ -27,7 +53,7 @@ async function getBinanceKlines(symbol: string, interval: string, limit = 500) {
     }
 
     const klineData = klines.map((k: any) => ({
-        time: k[0] / 1000, // Binance provides timestamp in ms, lightweight-charts expects seconds
+        time: (k[0] / 1000) as Time, // Binance provides timestamp in ms, lightweight-charts expects seconds
         open: parseFloat(k[1]),
         high: parseFloat(k[2]),
         low: parseFloat(k[3]),
@@ -35,7 +61,13 @@ async function getBinanceKlines(symbol: string, interval: string, limit = 500) {
         volume: parseFloat(k[5]), // Add volume
     }));
 
-    return { klineData, precision };
+    const volumeData = klineData.map((k: any) => ({
+        time: k.time,
+        value: k.volume,
+        color: k.close > k.open ? colors.up : colors.down,
+    }));
+
+    return { klineData, precision, volumeData };
 }
 
 async function getAllBinanceSymbols() {
@@ -60,49 +92,40 @@ function calculateVolumeForPriceRange(priceRange: Priceranges) {
     const minTime = Math.min(p1Time, p2Time);
     const maxTime = Math.max(p1Time, p2Time);
 
-    const p1Price = priceRange.p1.price;
-    const p2Price = priceRange.p2.price;
-    const minPrice = Math.min(p1Price, p2Price);
-    const maxPrice = Math.max(p1Price, p2Price);
-
-    for (const candle of allKlineData) {
-        const candleTime = candle.time * 1000; // Convert to milliseconds for comparison with p1Time/p2Time
-        const candleHigh = candle.high;
-        const candleLow = candle.low;
-        const candleVolume = candle.volume;
+    for (const candle of volumes.data) {
+        const candleTime = candle.time as number; // Convert to milliseconds for comparison with p1Time/p2Time
+        const candleVolume = candle.value;
 
         if (candleTime >= minTime && candleTime <= maxTime) {
-            if (Math.max(candleLow, minPrice) <= Math.min(candleHigh, maxPrice)) {
-                totalVolume += candleVolume;
-            }
+            totalVolume += candleVolume;
         }
     }
     return totalVolume;
 }
 
 async function updateChartData() {
-    const { klineData: newKlineData, precision } = await getBinanceKlines(currentSymbol, currentInterval);
-    allKlineData = newKlineData; // Update global klineData
+    const { klineData, precision, volumeData } = await getBinanceKlines(currentSymbol, currentInterval);
+    candles.data = klineData; // Update global klineData
 
-    if (!candlestickSeries) {
+    if (!candles.tickSeries) {
         // This should only happen on initial setup
-        candlestickSeries = chart.addSeries(CandlestickSeries, {
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderDownColor: '#ef5350',
-            borderUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
-            wickUpColor: '#26a69a',
+        candles.tickSeries = chart.addSeries(CandlestickSeries, {
+            upColor: colors.up,
+            downColor: colors.down,
+            borderDownColor: colors.borderDownColor,
+            borderUpColor: colors.borderUpColor,
+            wickDownColor: colors.wickDownColor,
+            wickUpColor: colors.wickUpColor,
             priceFormat: {
                 type: 'price',
                 precision: precision,
                 minMove: 1 / Math.pow(10, precision),
             },
         });
-        Priceranges.setTargetSeries(candlestickSeries); // Set the target series for drawing
+        Priceranges.setTargetSeries(candles.tickSeries); // Set the target series for drawing
     } else {
         // Update price format if precision changes
-        candlestickSeries.applyOptions({
+        candles.tickSeries.applyOptions({
             priceFormat: {
                 type: 'price',
                 precision: precision,
@@ -111,20 +134,20 @@ async function updateChartData() {
         });
     }
 
-    candlestickSeries.setData(allKlineData); // Use allKlineData here
+    candles.tickSeries.setData(candles.data); // Use allKlineData here
 
     // Existing primitive drawing logic (keep as is for now, might need adjustment later)
-    if (allKlineData.length > 50) { // Use allKlineData here
-        const time1 = allKlineData[allKlineData.length - 50].time;
-        const time2 = allKlineData[allKlineData.length - 10].time;
+    if (candles.data.length > 50) { // Use allKlineData here
+        const time1 = candles.data[candles.data.length - 50].time;
+        const time2 = candles.data[candles.data.length - 10].time;
 
         const primitive1 = new Priceranges(
-            { price: allKlineData[allKlineData.length - 50].low * 0.95, time: time1 },
-            { price: allKlineData[allKlineData.length - 10].high * 1.05, time: time2 }
+            { price: candles.data[candles.data.length - 50].low, time: time1 },
+            { price: candles.data[candles.data.length - 10].high, time: time2 }
         );
         const primitive2 = new Priceranges(
-            { price: allKlineData[allKlineData.length - 80].low * 0.95, time: allKlineData[allKlineData.length - 80].time },
-            { price: allKlineData[allKlineData.length - 60].high * 1.05, time: allKlineData[allKlineData.length - 60].time }
+            { price: candles.data[candles.data.length - 80].low, time: candles.data[candles.data.length - 80].time },
+            { price: candles.data[candles.data.length - 60].high, time: candles.data[candles.data.length - 60].time }
         );
 
         // Clear existing primitives before attaching new ones if needed
@@ -133,10 +156,29 @@ async function updateChartData() {
         // If Priceranges has a way to clear all attached primitives, it should be called here.
         // Otherwise, this might lead to multiple primitives being drawn on each update.
         // For this task, I will not implement clearing primitives, as it's not explicitly requested and might require changes in Priceranges class.
-        candlestickSeries.attachPrimitive(primitive1);
-        candlestickSeries.attachPrimitive(primitive2);
+        candles.tickSeries.attachPrimitive(primitive1);
+        candles.tickSeries.attachPrimitive(primitive2);
     }
-    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange); // This will be a new static method in Priceranges
+
+    if (!volumes.series) {
+        volumes.series = chart.addSeries(HistogramSeries, {
+            priceFormat: {
+                type: 'volume',
+            },
+            priceScaleId: 'volume',
+        });
+        chart.priceScale('volume').applyOptions({
+            scaleMargins: {
+                top: 0.7,
+                bottom: 0,
+            },
+        });
+    }
+
+    volumes.series.setData(volumeData);
+    volumes.data = volumeData; // Update global volumeData
+
+    Priceranges.updateAllVolumes(calculateVolumeForPriceRange); // This will be a new static method in Priceranges
 }
 
 async function setupChart() {
@@ -182,20 +224,18 @@ async function setupChart() {
 
         // Set initial selected symbol
         if (symbols.length > 0) {
-            currentSymbol = symbols[0]; // Set to the first fetched symbol
             symbolSelect.value = currentSymbol; // Update the dropdown to show the selected value
         }
     }
 
     await updateChartData();
-    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange); // Call it here too for initial ranges
 }
 
 setupChart();
 
 // Set callback for price range modifications
 Priceranges.setOnPriceRangeModified(() => {
-    Priceranges.updateAllVolumes(allKlineData, calculateVolumeForPriceRange);
+    Priceranges.updateAllVolumes(calculateVolumeForPriceRange);
 });
 
 // Add button event listener

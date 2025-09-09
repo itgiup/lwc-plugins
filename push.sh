@@ -1,5 +1,5 @@
 git add .
-git commit -m "price range: ok"
+git commit -m "price range: vẽ được, cập nhật được volume khi thay đổi"
 git push
 
 # merge -> main 

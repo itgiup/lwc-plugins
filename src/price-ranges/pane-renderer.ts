@@ -133,7 +133,8 @@ export class PricerangesPaneRenderer implements IPrimitivePaneRenderer {
                         const volumeLabelWidth = volumeTextMetrics.width + 10 * scope.horizontalPixelRatio;
                         const volumeLabelHeight = 20 * scope.verticalPixelRatio;
                         const volumeLabelX = xCenter - volumeLabelWidth / 2;
-                        const volumeLabelY = currentLabelY - volumeLabelHeight - 5; // 5px above the previous label
+                        // Position volume label below the rectangle instead of above
+                        const volumeLabelY = verticalPositions.position + verticalPositions.length + 5; // 5px below the box
 
                         // background
                         ctx.fillStyle = options.labelBackgroundColor;
@@ -148,8 +149,8 @@ export class PricerangesPaneRenderer implements IPrimitivePaneRenderer {
                         ctx.textBaseline = 'middle';
                         ctx.fillText(volumeLabelText, xCenter, volumeLabelY + volumeLabelHeight / 2);
 
-                        // Adjust delete button position if volume label is present
-                        currentLabelY = volumeLabelY; // Update currentLabelY to the top of the volume label
+                        // No need to adjust delete button position based on volume label
+                        // since it's now below the rectangle and price label is still above
                     }
 
 					// Draw delete button if selected
