@@ -32,6 +32,12 @@ export interface PathDataSource {
 	 */
 	options(): PathOptions;
 
+	/**
+	 * Gets the index of the selected point.
+	 * @returns The index of the selected point, or null if no point is selected.
+	 */
+	selectedPointIndex(): number | null;
+
 	/** The chart API instance. */
 	chart: IChartApi;
 

@@ -11,14 +11,22 @@ export class PathPaneRenderer implements IPrimitivePaneRenderer {
 	_points: ViewPoint[];
 	/** The data source for the path. */
 	_source: PathDataSource;
+	/** The index of the selected point. */
+	_selectedPointIndex: number | null;
 
 	/**
 	 * Creates an instance of PathPaneRenderer.
 	 * @param points - The array of view points.
+	 * @param selectedPointIndex - The index of the selected point.
 	 * @param source - The data source for the path.
 	 */
-	constructor(points: ViewPoint[], source: PathDataSource) {
+	constructor(
+		points: ViewPoint[],
+		selectedPointIndex: number | null,
+		source: PathDataSource
+	) {
 		this._points = points;
+		this._selectedPointIndex = selectedPointIndex;
 		this._source = source;
 	}
 
@@ -51,9 +59,15 @@ export class PathPaneRenderer implements IPrimitivePaneRenderer {
 			ctx.stroke();
 
 			// Draw points (vertices)
-			ctx.fillStyle = options.pointColor;
-			for (const point of this._points) {
+			for (let i = 0; i < this._points.length; i++) {
+				const point = this._points[i];
 				if (point.x === null || point.y === null) continue;
+
+				if (i === this._selectedPointIndex) {
+					ctx.fillStyle = options.selectedPointColor;
+				} else {
+					ctx.fillStyle = options.pointColor;
+				}
 
 				ctx.beginPath();
 				ctx.arc(point.x, point.y, options.pointRadius, 0, 2 * Math.PI);

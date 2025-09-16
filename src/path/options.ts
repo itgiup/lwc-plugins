@@ -40,5 +40,5 @@ export const defaultPathOptions: PathOptions = {
 	pointColor: 'rgba(0, 122, 255, 1)',
 	pointRadius: 5,
 	hoverPointColor: 'rgba(0, 122, 255, 0.8)',
-	selectedPointColor: 'rgba(255, 159, 26, 1)',
+	selectedPointColor: 'rgba(223, 172, 5, 1)',
 };

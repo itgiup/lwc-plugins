@@ -23,6 +23,8 @@ export class PathPaneView implements IPrimitivePaneView {
 	_source: PathDataSource;
 	/** The array of view points. */
 	_points: ViewPoint[] = [];
+	/** The index of the selected point. */
+	_selectedPointIndex: number | null = null;
 
 	/**
 	 * Creates an instance of PathPaneView.
@@ -41,6 +43,7 @@ export class PathPaneView implements IPrimitivePaneView {
 			x: timeScale.timeToCoordinate(p.time),
 			y: this._source.series.priceToCoordinate(p.price),
 		}));
+		this._selectedPointIndex = this._source.selectedPointIndex();
 	}
 
 	/**
@@ -48,6 +51,6 @@ export class PathPaneView implements IPrimitivePaneView {
 	 * @returns The pane renderer.
 	 */
 	renderer() {
-		return new PathPaneRenderer(this._points, this._source);
+		return new PathPaneRenderer(this._points, this._selectedPointIndex, this._source);
 	}
 }
