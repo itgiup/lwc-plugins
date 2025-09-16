@@ -7,6 +7,8 @@ import {
     HistogramData
 } from 'lightweight-charts';
 import { Priceranges, SelectionManager, PricerangesOptions } from '../price-ranges';
+import { PathPrimitive } from '../path';
+
 
 let currentSymbol = 'BTCUSDT'; // Renamed from 'symbol' to avoid conflict with global scope
 let currentInterval = '1m'; // Renamed from 'interval'
@@ -101,7 +103,7 @@ function calculateVolumeForPriceRange(priceRange: Priceranges) {
         }
     }
     const options: Partial<PricerangesOptions> = {
-        volumeLabelTextColor: Math.floor(totalVolume) % 2 === 0 ? colors.up : colors.down, // Green background
+        volumeLabelTextColor: Math.floor(totalVolume) % 2 === 0 ? colors.up : colors.down,
     }
     return {
         volume: totalVolume,
@@ -147,11 +149,11 @@ async function updateChartData() {
         const time1 = candles.data[candles.data.length - 50].time;
         const time2 = candles.data[candles.data.length - 10].time;
 
-        const primitive1 = new Priceranges(
+        const priceranges1 = new Priceranges(
             { price: candles.data[candles.data.length - 50].low, time: time1 },
             { price: candles.data[candles.data.length - 10].high, time: time2 }
         );
-        const primitive2 = new Priceranges(
+        const priceranges2 = new Priceranges(
             { price: candles.data[candles.data.length - 80].low, time: candles.data[candles.data.length - 80].time },
             { price: candles.data[candles.data.length - 60].high, time: candles.data[candles.data.length - 60].time }
         );
@@ -162,8 +164,33 @@ async function updateChartData() {
         // If Priceranges has a way to clear all attached primitives, it should be called here.
         // Otherwise, this might lead to multiple primitives being drawn on each update.
         // For this task, I will not implement clearing primitives, as it's not explicitly requested and might require changes in Priceranges class.
-        candles.tickSeries.attachPrimitive(primitive1);
-        candles.tickSeries.attachPrimitive(primitive2);
+        candles.tickSeries.attachPrimitive(priceranges1);
+        candles.tickSeries.attachPrimitive(priceranges2);
+
+
+        // khoảng cách tầm 20 nến, 5 điểm bất kì, tạo thành mẫu path 
+        const pathData = [];
+        const dataLength = candles.data.length;
+        const pointsCount = 5;
+        const separation = 20;
+        const requiredDataLength = (pointsCount - 1) * separation + 40; // Some buffer
+
+        if (dataLength > requiredDataLength) {
+            let currentIndex = dataLength - requiredDataLength;
+
+            for (let i = 0; i < pointsCount; i++) {
+                if (candles.data[currentIndex]) {
+                    pathData.push({
+                        time: candles.data[currentIndex].time,
+                        price: candles.data[currentIndex].close,
+                    });
+                }
+                currentIndex += separation;
+            }
+        }
+        const path = new PathPrimitive(pathData);
+        candles.tickSeries.attachPrimitive(path);
+
     }
 
     if (!volumes.series) {
@@ -260,6 +287,20 @@ if (drawButton) {
         });
     });
 }
+
+const drawPathButton = document.getElementById('drawPathButton') as HTMLButtonElement;
+drawPathButton.addEventListener('click', () => {
+    if (!candles.tickSeries || !chart) return;
+    console.log('Draw Path button clicked');
+    PathPrimitive.startDrawing(chart, candles.tickSeries, (newPath) => {
+        candles.tickSeries?.attachPrimitive(newPath);
+        console.log('Path drawn:', newPath.points());
+        // You might want to disable drawing mode after one path is drawn
+        // PathPrimitive.stopDrawing();
+    });
+});
+
+
 
 // Add event listeners for symbol and timeframe selection
 const symbolSelect = document.getElementById('symbolSelect') as HTMLSelectElement;
